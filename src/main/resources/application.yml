@@ -1,0 +1,57 @@
+server:
+  port: 8334
+  servlet:
+    context-path: /api/linda
+spring:
+  application:
+    name: linda-brain
+  # 数据库配置
+  datasource:
+    master:
+      driver-class-name: com.mysql.cj.jdbc.Driver
+      url: jdbc:mysql://localhost:3306/linda
+      username: root
+      password: 123456
+      type: com.alibaba.druid.pool.DruidDataSource
+    slave1:
+      driver-class-name: com.mysql.cj.jdbc.Driver
+      url: jdbc:mysql://localhost:3306/linda
+      username: root
+      password: 123456
+      type: com.alibaba.druid.pool.DruidDataSource
+    slave2:
+      driver-class-name: com.mysql.cj.jdbc.Driver
+      url: jdbc:mysql://localhost:3306/linda
+      username: root
+      password: 123456
+      type: com.alibaba.druid.pool.DruidDataSource
+  redis:
+    host: localhost
+    port: 6379
+    password: 123456
+    database: 0
+    timeout: 3000
+    lettuce:
+      pool:
+        max-active: 20   # 最大活跃连接数（默认8）
+        max-idle: 10     # 最大空闲连接数（默认8）
+        min-idle: 3      # 最小空闲连接数（默认0）
+        max-wait: 5000   # 获取连接最大等待时间（毫秒，默认-1无限等待）
+    ssl: false
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true # 数据库字段映射Java驼峰属性名
+    # 仅在开发环境开启日志
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name} # 暴露的数据中添加application label
