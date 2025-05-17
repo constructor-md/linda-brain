@@ -36,7 +36,7 @@ public class WebSocketConnectionManager {
             log.info("关闭用户 {} 的旧连接", userId);
         }
         userChannelMap.put(userId, channel);
-        log.info("用户 {} 建立WebSocket连接", userId);
+        log.info("用户 {} 建立WebSocket连接. 当前在线用户数：{}", userId, getOnlineCount());
     }
 
     /**
