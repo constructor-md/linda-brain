@@ -7,7 +7,7 @@ import com.awesome.lindabrain.exception.BusinessException;
 import com.awesome.lindabrain.exception.ErrorCode;
 import com.awesome.lindabrain.exception.ThrowUtils;
 import com.awesome.lindabrain.mapper.UserInfoMapper;
-import com.awesome.lindabrain.model.LoginRequest;
+import com.awesome.lindabrain.model.request.LoginRequest;
 import com.awesome.lindabrain.service.UserInfoService;
 import com.awesome.lindabrain.model.entity.UserInfo;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;

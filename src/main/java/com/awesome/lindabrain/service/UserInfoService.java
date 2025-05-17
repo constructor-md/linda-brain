@@ -1,6 +1,6 @@
 package com.awesome.lindabrain.service;
 
-import com.awesome.lindabrain.model.LoginRequest;
+import com.awesome.lindabrain.model.request.LoginRequest;
 import com.awesome.lindabrain.model.entity.UserInfo;
 import com.baomidou.mybatisplus.extension.service.IService;
 

@@ -1,7 +1,7 @@
 package com.awesome.lindabrain.controller;
 
 import com.awesome.lindabrain.commons.R;
-import com.awesome.lindabrain.model.LoginRequest;
+import com.awesome.lindabrain.model.request.LoginRequest;
 import com.awesome.lindabrain.service.UserInfoService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -23,15 +23,10 @@ public class UserController {
         return R.ok();
     }
 
-
     @PostMapping("/login")
     public R<?> login(@RequestBody LoginRequest loginRequest) {
         return R.ok(userInfoService.login(loginRequest));
     }
-
-
-
-
 
 
 }

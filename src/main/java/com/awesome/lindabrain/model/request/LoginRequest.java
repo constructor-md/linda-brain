@@ -1,4 +1,4 @@
-package com.awesome.lindabrain.model;
+package com.awesome.lindabrain.model.request;
 
 import lombok.Data;
 
