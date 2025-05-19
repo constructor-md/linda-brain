@@ -4,6 +4,7 @@ import com.awesome.lindabrain.annotation.Login;
 import com.awesome.lindabrain.commons.R;
 import com.awesome.lindabrain.model.dto.SessionInfoDto;
 import com.awesome.lindabrain.service.SessionService;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,10 +26,12 @@ public class SessionController {
      * 分页获取当前用户会话列表
      * 前端滚动查询，每页20条
      */
-    @GetMapping("/list")
+    @GetMapping("/history")
     @Login
-    public R<List<SessionInfoDto>> getSessionList() {
-        return R.ok(sessionService.getSessionList());
+    public R<List<SessionInfoDto>> getSessionList(
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size) {
+        return R.ok(sessionService.getSessionList(new Page<>(page, size)));
     }
 
     /**

@@ -6,24 +6,47 @@ import lombok.experimental.Accessors;
 
 @Data
 @Accessors(chain = true)
-public class WebsocketMessage {
-
-    // 所属会话ID
-    private String sessionId;
-    // 消息ID 后端临时生成 表征一批websocket消息属于同一个消息的不同部分
-    private String messageId;
+public class WebsocketMessage<T> {
     // 消息类型枚举
     private String messageType;
     // 消息内容
-    private String content;
+    private T content;
     // 消息时间戳
     private long timestamp;
 
-    public static WebsocketMessage createChatMessage() {
-        return new WebsocketMessage().setMessageType(MessageType.CHAT.name()).setTimestamp(System.currentTimeMillis());
+    // 聊天消息
+    @Data
+    public static class Chat {
+        private String sessionId;
+        private String messageId;
+        private String content;
+        private String createTime;
     }
 
-    public static WebsocketMessage createTitleMessage() {
-        return new WebsocketMessage().setMessageType(MessageType.TITLE.name()).setTimestamp(System.currentTimeMillis());
+    // 新建会话消息
+    @Data
+    public static class Title {
+        private String sessionId;
+        private String title;
+    }
+
+    public static WebsocketMessage<Chat> createChatMessage() {
+        return new WebsocketMessage<Chat>().setMessageType(MessageType.CHAT.name())
+                .setContent(new Chat())
+                .setTimestamp(System.currentTimeMillis());
+    }
+
+    public static WebsocketMessage<Title> createTitleMessage() {
+        return new WebsocketMessage<Title>()
+                .setMessageType(MessageType.TITLE.name())
+                .setContent(new Title())
+                .setTimestamp(System.currentTimeMillis());
+    }
+
+    public static WebsocketMessage<?> createDoneMessage() {
+        return new WebsocketMessage<Title>()
+                .setMessageType(MessageType.DONE.name())
+                .setContent(null)
+                .setTimestamp(System.currentTimeMillis());
     }
 }

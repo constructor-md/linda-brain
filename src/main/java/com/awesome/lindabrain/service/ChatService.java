@@ -15,7 +15,7 @@ import java.util.Map;
 */
 public interface ChatService extends IService<Chat> {
 
-    void processUserMessage(ChatRequest chatRequest);
+    ChatInfoDto processUserMessage(ChatRequest chatRequest);
 
     List<ChatInfoDto> getChatList(Long sessionId);
 }

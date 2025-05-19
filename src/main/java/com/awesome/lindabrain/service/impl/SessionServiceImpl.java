@@ -8,6 +8,7 @@ import com.awesome.lindabrain.model.entity.Session;
 import com.awesome.lindabrain.service.ChatService;
 import com.awesome.lindabrain.service.SessionService;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
@@ -31,14 +32,20 @@ public class SessionServiceImpl extends ServiceImpl<SessionMapper, Session>
     @Lazy
     private ChatService chatService;
 
+    /**
+     * 获取会话列表，支持分页查询
+     * @param page 分页参数 需要指定页码和每页大小
+     * @return 会话信息列表
+     */
     @Override
-    public List<SessionInfoDto> getSessionList() {
+    public List<SessionInfoDto> getSessionList(Page<Session> page) {
         Long userId = UserInfoContext.get().getId();
         return this.lambdaQuery()
                 .eq(Session::getUserId, userId)
-                .list().stream()
+                .orderByDesc(Session::getCreateTime)
+                .page(page)
+                .getRecords().stream()
                 .map(SessionInfoDto::transferDto)
-                .sorted(Comparator.comparing(SessionInfoDto::getCreateTime))
                 .collect(Collectors.toList());
     }
 

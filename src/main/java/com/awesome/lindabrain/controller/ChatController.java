@@ -27,17 +27,16 @@ public class ChatController {
     /**
      * 用户发送消息
      */
-    @PostMapping("/info")
+    @PostMapping("/message")
     @Login
-    public R<?> sendChat(@RequestBody ChatRequest chatRequest) {
-        chatService.processUserMessage(chatRequest);
-        return R.ok();
+    public R<ChatInfoDto> sendChat(@RequestBody ChatRequest chatRequest) {
+        return R.ok(chatService.processUserMessage(chatRequest));
     }
 
     /**
      * 根据 session 查找聊天记录
      */
-    @GetMapping("/list")
+    @GetMapping("/history")
     @Login
     public R<List<ChatInfoDto>> getChatList(@RequestParam("id") String sessionId) {
         return R.ok(chatService.getChatList(Long.valueOf(sessionId)));

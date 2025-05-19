@@ -2,6 +2,7 @@ package com.awesome.lindabrain.service;
 
 import com.awesome.lindabrain.model.dto.SessionInfoDto;
 import com.awesome.lindabrain.model.entity.Session;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 import java.util.List;
@@ -13,7 +14,7 @@ import java.util.List;
 */
 public interface SessionService extends IService<Session> {
 
-    List<SessionInfoDto> getSessionList();
+    List<SessionInfoDto> getSessionList(Page<Session> page);
 
     void deleteSession(Long sessionId);
 }

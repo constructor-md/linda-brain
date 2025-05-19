@@ -70,7 +70,7 @@ public class WebSocketConnectionManager {
      * @param message 消息对象
      * @return 发送是否成功
      */
-    public boolean sendMessageToUser(Long userId, WebsocketMessage message) {
+    public boolean sendMessageToUser(Long userId, WebsocketMessage<?> message) {
         Channel channel = userChannelMap.get(userId);
         if (channel != null && channel.isActive()) {
             try {

@@ -5,5 +5,7 @@ package com.awesome.lindabrain.websocket;
  */
 public enum MessageType {
     TITLE,
-    CHAT
+    CHAT,
+
+    DONE
 }

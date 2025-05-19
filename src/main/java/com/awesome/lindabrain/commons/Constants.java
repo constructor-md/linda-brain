@@ -31,4 +31,7 @@ public class Constants {
     // WebSocket Channel属性键
     public static final AttributeKey<Long> CHANNEL_ATTR_USER_ID = AttributeKey.valueOf("userId");
 
+    // 全局时间格式
+    public static final String TIME_FORMATTER = "yyyy-MM-dd HH:mm:ss";
+
 }

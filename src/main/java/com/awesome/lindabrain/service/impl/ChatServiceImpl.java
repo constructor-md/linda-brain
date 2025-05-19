@@ -13,6 +13,7 @@ import com.awesome.lindabrain.model.request.DeepSeekMessage;
 import com.awesome.lindabrain.service.AiService;
 import com.awesome.lindabrain.service.ChatService;
 import com.awesome.lindabrain.service.SessionService;
+import com.awesome.lindabrain.utils.SnowflakeIdUtil;
 import com.awesome.lindabrain.websocket.WebSocketConnectionManager;
 import com.awesome.lindabrain.websocket.WebsocketMessage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -21,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -60,7 +62,8 @@ public class ChatServiceImpl extends ServiceImpl<ChatMapper, Chat>
     private static final String TITLE_PROMPT = "" +
             "请你总结我接下来发给你的信息，生成一个title，作为这段会话的标题。" +
             "这个标题应该是纯英文的，可以带有emoji。" +
-            "这个标题的长度不应超过25个字符";
+            "这个标题的长度不应超过25个字符。" +
+            "这个标题是纯文本类型，";
 
     private static final DeepSeekMessage SYSTEM = DeepSeekMessage.create()
             .setRole(Constants.DEEPSEEK_ROLE_SYSTEM)
@@ -83,13 +86,13 @@ public class ChatServiceImpl extends ServiceImpl<ChatMapper, Chat>
      * @param chatRequest 用户消息
      */
     @Transactional
-    public void processUserMessage(ChatRequest chatRequest) {
+    public ChatInfoDto processUserMessage(ChatRequest chatRequest) {
         boolean newSession = StrUtil.isBlank(chatRequest.getSessionId());
 
         if (newSession) {
-            processNewSession(chatRequest);
+            return ChatInfoDto.transferDto(processNewSession(chatRequest));
         } else {
-            processOldSession(chatRequest);
+            return ChatInfoDto.transferDto(processOldSession(chatRequest));
         }
     }
 
@@ -99,13 +102,13 @@ public class ChatServiceImpl extends ServiceImpl<ChatMapper, Chat>
         return this.lambdaQuery()
                 .eq(Chat::getSessionId, sessionId)
                 .in(Chat::getSender, Arrays.asList(userId, 0L))
+                .orderByAsc(Chat::getCreateTime).orderByAsc(Chat::getId)
                 .list().stream()
                 .map(ChatInfoDto::transferDto)
-                .sorted(Comparator.comparing(ChatInfoDto::getCreateTime))
                 .collect(Collectors.toList());
     }
 
-    private void processNewSession(ChatRequest chatRequest) {
+    private Chat processNewSession(ChatRequest chatRequest) {
         // 直接调用AI
         Long userId = UserInfoContext.get().getId();
         List<DeepSeekMessage> messages = new ArrayList<>();
@@ -119,16 +122,19 @@ public class ChatServiceImpl extends ServiceImpl<ChatMapper, Chat>
         Session session = saveNewSession(userId);
 
         // 保存用户消息
-        saveUserMessage(session.getId(), userId, chatRequest.getContent());
+        Long messageId = SnowflakeIdUtil.nextId();
+        Chat chat = saveUserMessage(session.getId(), messageId, userId, chatRequest.getContent());
         // 刷新 title
         titleGenerate(session.getId(), userId, Collections.singletonList(userMessage));
 
         // 与 Linda 沟通
         sendLindaAndReplyUser(session.getId(), userId, messages);
+
+        return chat;
     }
 
 
-    private void processOldSession(ChatRequest chatRequest) {
+    private Chat processOldSession(ChatRequest chatRequest) {
         Long userId = UserInfoContext.get().getId();
         List<DeepSeekMessage> messages = new ArrayList<>();
         messages.add(SYSTEM);
@@ -149,26 +155,32 @@ public class ChatServiceImpl extends ServiceImpl<ChatMapper, Chat>
         messages.add(userMessage);
 
         // 保存用户消息
-        saveUserMessage(sessionId, userId, chatRequest.getContent());
+        Long messageId = SnowflakeIdUtil.nextId();
+        Chat chat = saveUserMessage(sessionId, messageId, userId, chatRequest.getContent());
 
         // 与 Linda 沟通
         sendLindaAndReplyUser(sessionId, userId, messages);
 
+        return chat;
     }
 
     private void sendLindaAndReplyUser(Long sessionId, Long userId, List<DeepSeekMessage> messages) {
         StringBuilder stringBuilder = new StringBuilder();
-        String messageId = UUID.randomUUID().toString();
+        // 使用雪花ID生成器生成消息ID
+        Long messageId = SnowflakeIdUtil.nextId();
         try {
+            WebsocketMessage<WebsocketMessage.Chat> websocketMessage = WebsocketMessage.createChatMessage();
+            websocketMessage.getContent().setMessageId(String.valueOf(messageId));
+            websocketMessage.getContent().setSessionId(String.valueOf(sessionId));
+            Date createTime = new Date();
+            websocketMessage.getContent()
+                    .setCreateTime(new SimpleDateFormat(Constants.TIME_FORMATTER).format(createTime));
             // 调用AiService的流式API方法
             aiService.sendMessageToDeepSeekForStream(messages)
                     .subscribe(
                             content -> {
                                 // 将AI的回复发给用户
-                                WebsocketMessage websocketMessage = WebsocketMessage.createChatMessage();
-                                websocketMessage.setMessageId(messageId);
-                                websocketMessage.setContent(content);
-                                websocketMessage.setSessionId(String.valueOf(sessionId));
+                                websocketMessage.getContent().setContent(content);
                                 stringBuilder.append(content);
                                 webSocketConnectionManager.sendMessageToUser(userId, websocketMessage);
                             },
@@ -179,8 +191,9 @@ public class ChatServiceImpl extends ServiceImpl<ChatMapper, Chat>
                             // 处理完成
                             () -> {
                                 log.info("流式响应处理完成");
+                                webSocketConnectionManager.sendMessageToUser(userId, WebsocketMessage.createDoneMessage());
                                 // 保存 Linda 回复的消息
-                                saveLindaMessage(sessionId, stringBuilder.toString());
+                                saveLindaMessage(sessionId, messageId, stringBuilder.toString(), createTime);
                             }
                     );
         } catch (Exception e) {
@@ -202,8 +215,9 @@ public class ChatServiceImpl extends ServiceImpl<ChatMapper, Chat>
                             .set(Session::getTitle, result)
                             .update();
                     // 告知客户端更新指定会话的 title
-                    WebsocketMessage websocketMessage = WebsocketMessage.createTitleMessage();
-                    websocketMessage.setContent(result);
+                    WebsocketMessage<WebsocketMessage.Title> websocketMessage = WebsocketMessage.createTitleMessage();
+                    websocketMessage.getContent().setSessionId(String.valueOf(sessionId));
+                    websocketMessage.getContent().setTitle(result);
                     webSocketConnectionManager.sendMessageToUser(userId, websocketMessage);
                 })
                 .exceptionally(ex -> {
@@ -245,23 +259,26 @@ public class ChatServiceImpl extends ServiceImpl<ChatMapper, Chat>
         return session;
     }
 
-    private void saveLindaMessage(Long sessionId, String message) {
+    private void saveLindaMessage(Long sessionId, Long messageId, String message, Date createTime) {
         Chat chat = new Chat();
+        chat.setId(messageId);
         chat.setSessionId(sessionId);
-        chat.setCreateTime(new Date());
+        chat.setCreateTime(createTime);
         chat.setMessage(message);
         // 0 表示 Linda
         chat.setSender(0L);
         this.save(chat);
     }
 
-    private void saveUserMessage(Long sessionId, Long userId, String message) {
+    private Chat saveUserMessage(Long sessionId, Long messageId, Long userId, String message) {
         Chat chat = new Chat();
+        chat.setId(messageId);
         chat.setSessionId(sessionId);
         chat.setSender(userId);
         chat.setMessage(message);
         chat.setCreateTime(new Date());
         this.save(chat);
+        return chat;
     }
 }
 
