@@ -8,8 +8,8 @@
     <!-- 日志可携带应用名 -->
     <springProperty name="springAppName" scope="context" source="spring.application.name" />
     <!-- 日志输出格式 -->
-    <property name="LogPatternConsole" value="%d{yyyy-MM-dd HH:mm:ss.SSS} %clr(${springAppName}) %clr(${PID:- }){magenta} %clr(-%5p [%X{tlogTraceId:-},%X{X-B3-SpanId:-}]) %clr(-){faint} %clr([%t]){faint} %clr(%logger){cyan} %clr(:){faint} %msg%n" />
-    <property name="LogPattern" value="%d{yyyy-MM-dd HH:mm:ss.SSS} ${springAppName} [%X{tlogTraceId:-}] %level{5} [%thread] [%X{X-B3-SpanId:-}] %logger{20} - %msg%n"/>
+    <property name="LogPatternConsole" value="[%d{yyyy-MM-dd HH:mm:ss.SSS}] %clr(${springAppName}) %clr(${PID:- }){magenta} %clr(-%5p [%X{tlogTraceId:-},%X{X-B3-SpanId:-}]) %clr(-){faint} %clr([%t]){faint} %clr(%logger){cyan} %clr(:){faint} %msg%n" />
+    <property name="LogPattern" value="[%d{yyyy-MM-dd HH:mm:ss.SSS}] ${springAppName} [%X{tlogTraceId:-}] %level{5} [%thread] [%X{X-B3-SpanId:-}] %logger{20} - %msg%n"/>
 
     <!-- 日志存放路径 -->
     <property name="logPath" value="./logs"/>
