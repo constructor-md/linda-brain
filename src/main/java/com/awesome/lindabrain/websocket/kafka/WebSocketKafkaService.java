@@ -52,7 +52,7 @@ public class WebSocketKafkaService {
             String jsonMessage = objectMapper.writeValueAsString(kafkaMessage);
             // 发送到Kafka消息主题
             kafkaTemplate.send(KafkaConfig.WEBSOCKET_MESSAGE_TOPIC, userId.toString(), jsonMessage);
-            log.debug("发送WebSocket消息到Kafka: userId={}, messageType={}", userId, message.getMessageType());
+            log.info("发送WebSocket消息到Kafka: userId={}, messageType={}", userId, message.getMessageType());
         } catch (JsonProcessingException e) {
             log.error("序列化WebSocket消息失败", e);
         } catch (Exception e) {
@@ -135,7 +135,7 @@ public class WebSocketKafkaService {
                         // 发送消息给用户
                         boolean sent = connectionManager.sendMessageToUser(userId, websocketMessage);
                         if (sent) {
-                            log.debug("转发来自节点 {} 的WebSocket消息到用户 {}", kafkaMessage.getNodeId(), userId);
+                            log.info("转发来自节点 {} 的WebSocket消息到用户 {}", kafkaMessage.getNodeId(), userId);
                         }
                     } catch (Exception e) {
                         log.error("处理Kafka WebSocket消息失败", e);

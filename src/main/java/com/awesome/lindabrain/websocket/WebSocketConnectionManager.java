@@ -100,7 +100,7 @@ public class WebSocketConnectionManager {
         } else {
             // 用户不在当前节点连接，通过Kafka广播消息
             // 消息将被所有节点接收，持有该用户连接的节点会处理并发送给用户
-            log.debug("用户 {} 不在当前节点连接，通过Kafka广播消息", userId);
+            log.info("用户 {} 不在当前节点连接，通过Kafka广播消息", userId);
             kafkaService.sendWebSocketMessage(userId, message);
             return true; // 返回true表示消息已发送到Kafka
         }
