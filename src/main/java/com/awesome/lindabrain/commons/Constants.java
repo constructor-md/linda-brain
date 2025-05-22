@@ -33,5 +33,7 @@ public class Constants {
 
     // 全局时间格式
     public static final String TIME_FORMATTER = "yyyy-MM-dd HH:mm:ss";
+    // 全局时区
+    public static final String TIME_ZONE = "Asia/Shanghai";
 
 }

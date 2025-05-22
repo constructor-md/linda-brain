@@ -13,7 +13,7 @@ public class ChatInfoDto {
     private String content;
     // Linda / User
     private String role;
-    @JsonFormat(pattern = Constants.TIME_FORMATTER, timezone = "UTF+8")
+    @JsonFormat(pattern = Constants.TIME_FORMATTER, timezone = Constants.TIME_ZONE)
     private Date createTime;
 
     public static ChatInfoDto transferDto(Chat chat) {

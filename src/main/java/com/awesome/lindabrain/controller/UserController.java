@@ -24,7 +24,7 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public R<?> login(@RequestBody LoginRequest loginRequest) {
+    public R<String> login(@RequestBody LoginRequest loginRequest) {
         return R.ok(userInfoService.login(loginRequest));
     }
 
