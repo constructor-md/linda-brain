@@ -70,6 +70,12 @@ spring:
       # 当没有初始偏移量或服务器上不再存在当前偏移量时的策略
       auto-offset-reset: latest
 
+# 日志配置
+logging:
+  config: file:./logback.xml  # 指定外部logback配置文件路径
+  file:
+    path: ./logs  # 日志文件路径，相对于jar包所在目录
+
 management:
   endpoints:
     web:

@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="true" scanPeriod="60 seconds" debug="false">
+    <!-- 引用Spring Boot默认的一些配置 -->
+    <include resource="org/springframework/boot/logging/logback/defaults.xml" />
+    <include resource="org/springframework/boot/logging/logback/console-appender.xml" />
+    <!--  console 日志带颜色  -->
+    <conversionRule conversionWord="clr" converterClass="org.springframework.boot.logging.logback.ColorConverter" />
+    <!-- 日志可携带应用名 -->
+    <springProperty name="springAppName" scope="context" source="spring.application.name" />
+    <!-- 日志输出格式 -->
+    <property name="LogPatternConsole" value="%d{yyyy-MM-dd HH:mm:ss.SSS} %clr(${springAppName}) %clr(${PID:- }){magenta} %clr(-%5p [%X{tlogTraceId:-},%X{X-B3-SpanId:-}]) %clr(-){faint} %clr([%t]){faint} %clr(%logger){cyan} %clr(:){faint} %msg%n" />
+    <property name="LogPattern" value="%d{yyyy-MM-dd HH:mm:ss.SSS} ${springAppName} [%X{tlogTraceId:-}] %level{5} [%thread] [%X{X-B3-SpanId:-}] %logger{20} - %msg%n"/>
+
+    <!-- 日志存放路径 -->
+    <property name="logPath" value="./logs"/>
+    <property name="logFile" value="${INFO_FILE:-${logPath}/info.log}" />
+    <property name="errorFile" value="${ERROR_FILE:-${logPath}/error.log}" />
+
+    <!-- 控制台输出 -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${LogPatternConsole}</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <!-- INFO日志 -->
+    <appender name="INFO_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <!-- 日志编码 -->
+        <encoder>
+            <pattern>${LogPattern}</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+        <!-- 正在记录的日志文件的路径及文件名 -->
+        <file>${logFile}</file>
+        <!-- 日志记录器的滚动策略，按日期和大小滚动 -->
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <!-- 归档的日志文件的路径，%d{yyyy-MM-dd}指定日期格式，%i指定索引 -->
+            <fileNamePattern>${logPath}/app-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <!-- 单个日志文件最大10MB -->
+            <maxFileSize>10MB</maxFileSize>
+            <!-- 保留3个归档文件 -->
+            <maxHistory>3</maxHistory>
+            <!-- 总大小限制，超出则删除旧文件 -->
+            <totalSizeCap>30MB</totalSizeCap>
+        </rollingPolicy>
+        <!-- 日志过滤器 -->
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <!--  记录INFO级别日志  -->
+            <level>INFO</level>
+            <!--  日志匹配时接收写入    -->
+            <onMatch>ACCEPT</onMatch>
+            <!--  日志不匹配时拒绝写入    -->
+            <onMismatch>DENY</onMismatch>
+        </filter>
+    </appender>
+
+    <!-- ERROR级别日志文件输出 -->
+    <appender name="ERROR_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <!--    日志编码    -->
+        <encoder>
+            <pattern>${LogPattern}</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+        <!-- 正在记录的日志文件的路径及文件名 -->
+        <file>${errorFile}</file>
+        <!-- 日志记录器的滚动策略，按日期，按大小记录 -->
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <!-- 归档的日志文件的路径，%d{yyyy-MM-dd}指定日期格式，%i指定索引 -->
+            <fileNamePattern>${logPath}/error-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <!-- 单个日志文件最大10MB -->
+            <maxFileSize>10MB</maxFileSize>
+            <!-- 保留3个归档文件 -->
+            <maxHistory>3</maxHistory>
+            <!-- 总大小限制，超出则删除旧文件 -->
+            <totalSizeCap>30MB</totalSizeCap>
+        </rollingPolicy>
+        <!-- 日志过滤器 -->
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <!--  记录ERROR级别日志  -->
+            <level>ERROR</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+    </appender>
+
+    <!--  日志独立线程异步写入文件 不阻塞主线程  -->
+    <appender name="AsyncRollingLogFile" class="ch.qos.logback.classic.AsyncAppender">
+        <!-- 不丢弃大于discardingThreshold的日志事件 为0则都不丢弃 队列满也不丢弃，阻塞到可以处理 -->
+        <discardingThreshold>0</discardingThreshold>
+        <!-- 日志队列 队列满则阻塞等待 -->
+        <queueSize>256</queueSize>
+        <appender-ref ref="INFO_FILE" />
+    </appender>
+
+    <appender name="AsyncErrorLogFile" class="ch.qos.logback.classic.AsyncAppender">
+        <!-- 不丢弃大于discardingThreshold的日志事件 为0则都不丢弃 队列满也不丢弃，阻塞到可以处理 -->
+        <discardingThreshold>0</discardingThreshold>
+        <!-- 日志队列 队列满则阻塞等待 -->
+        <queueSize>256</queueSize>
+        <appender-ref ref="ERROR_FILE" />
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="CONSOLE" />
+        <appender-ref ref="AsyncRollingLogFile" />
+        <appender-ref ref="AsyncErrorLogFile" />
+    </root>
+    <!-- 允许通过 JMX 工具查看 Logback 的运行状态 -->
+    <jmxConfigurator />
+
+    <!-- 设定特定包日志级别 -->
+    <logger name="com.awesome.lindabrain" level="INFO" />
+</configuration>
