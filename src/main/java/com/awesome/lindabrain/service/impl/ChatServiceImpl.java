@@ -60,10 +60,10 @@ public class ChatServiceImpl extends ServiceImpl<ChatMapper, Chat>
             "聊天时请用 emoji 代替动作和状态描述。";
 
     private static final String TITLE_PROMPT = "" +
-            "请你总结我接下来发给你的信息，生成一个title，作为这段会话的标题。" +
+            "请你总结我接下来发给你的信息，生成这段会话的标题。" +
             "这个标题应该是纯英文的，可以带有emoji。" +
             "这个标题的长度不应超过25个字符。" +
-            "这个标题是纯文本类型，";
+            "这个标题两端不应该带有引号。";
 
     private static final DeepSeekMessage SYSTEM = DeepSeekMessage.create()
             .setRole(Constants.DEEPSEEK_ROLE_SYSTEM)
